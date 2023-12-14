@@ -1,6 +1,6 @@
 const Websocket = require('ws')
 const fs = require('fs')
-const https = require('http')
+const https = require('https')
 
 const requestListener = function (req, res) {
     if (req.method == 'GET'){
@@ -59,9 +59,9 @@ const options = {
 };
 
 
-const Httpsserver = https.createServer(requestListener);
-Httpsserver.listen(8080, () => {
-    console.log(`Server is running on https://127.0.0.1:8080`);
+const Httpsserver = https.createServer(options,requestListener);
+Httpsserver.listen(443, () => {
+    console.log(`Server is running on https://127.0.0.1:443`);
 })
 
 
