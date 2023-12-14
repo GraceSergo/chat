@@ -144,7 +144,7 @@ async function WriteText(data){
     let date = d.toLocaleDateString()
     let time = d.toLocaleTimeString()
     if (date != lastdate) {
-	if(document.querySelector('.actual')) document.querySelector('.actual').classlist.remove('actual')
+	if(document.querySelector('.actual')) document.querySelector('.actual').classList.remove('actual')
         output.innerHTML += `<span class="date actual">${date}</span>`
         lastdate = date
     }
