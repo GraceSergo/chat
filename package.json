@@ -1,0 +1,16 @@
+{
+  "name": "chat",
+  "version": "1.0.0",
+  "description": "chat",
+  "main": "chat.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node chat.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.15.1"
+  },
+  "devDependencies": {}
+}
