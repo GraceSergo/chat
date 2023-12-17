@@ -61,7 +61,7 @@ let interval
 
 //Вход в систему
 document.getElementById('key').addEventListener('keypress',(e)=>{
-    if (e.which == 13) { Enter() }
+    if (e.which == 13) {e.preventDefault();Enter(); }
 })
 document.querySelector('.enter').addEventListener('click', e => {
     e.preventDefault();  Enter();
