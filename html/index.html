@@ -41,11 +41,11 @@
 
 <div class="commentbox" style="display:none;">
     <span>Comment <input type="button" class="clear" value="clear"></span>
-    <form id="comments" >
+    <div id="comments" >
         <div class="commenttext"></div>
         <input type="text" name="text" id="text" autofocus autocomplete="off">
         <button class="enc">Send</button>
-    </form>
+    </div>
 </div>
 <script src="scr.js"></script>
 <script>
@@ -152,7 +152,7 @@ async function WriteText(data){
 //     if (e.which == 13) {EncMsg();}
 // })
 document.querySelector('.enc').addEventListener('click', e => {
-    // e.preventDefault(); 
+    e.preventDefault(); 
     EncMsg();
 })
 //генерация сообщения на отправку
