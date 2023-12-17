@@ -148,9 +148,9 @@ async function WriteText(data){
     output.scrollTop = output.scrollHeight;
 }
 //Нажатие клавиши отправки сообщений
-// input.addEventListener('keypress',(e)=>{
-//     if (e.which == 13) {EncMsg();}
-// })
+input.addEventListener('keypress',(e)=>{
+    if (e.which == 13) {e.preventDefault(); EncMsg();}
+ })
 document.querySelector('.enc').addEventListener('click', e => {
     e.preventDefault(); 
     EncMsg();
