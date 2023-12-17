@@ -1,6 +1,6 @@
 const Websocket = require('ws')
 const fs = require('fs')
-const https = require('https')
+const https = require('http')
 
 
 let msgs = {}
@@ -64,9 +64,9 @@ const options = {
   cert: fs.readFileSync('html/cert.pem'),
 };
 
-const httpsserver = https.createServer(options, requestListener);
-httpsserver.listen(8888, () => {
-  console.log(`Server is running on https://127.0.0.1:8888`);
+const httpsserver = https.createServer( requestListener);
+httpsserver.listen(8080, () => {
+  console.log(`Server is running on https://127.0.0.1:8080`);
 })
 
 
