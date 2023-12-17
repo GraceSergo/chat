@@ -1,4 +1,3 @@
-const Websocket = require('ws')
 const fs = require('fs')
 const https = require('http')
 
