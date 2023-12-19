@@ -9,7 +9,7 @@
   },
   "author": "",
   "license": "ISC",
- "dependencies": {
+  "dependencies": {
     "ws": "^8.15.1"
   },
   "devDependencies": {}

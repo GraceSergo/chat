@@ -1,6 +1,6 @@
 const Websocket = require('ws')
 const fs = require('fs')
-const https = require('http')
+const https = require('https')
 
 const requestListener = function (req, res) {
     if (req.method == 'GET'){
@@ -60,18 +60,18 @@ const options = {
 
 
 const Httpsserver = https.createServer(options,requestListener);
-Httpsserver.listen(8080, () => {
-    console.log(`Server is running on https://______________:8080`);
+Httpsserver.listen(8080, options, () => {
+    console.log(`Server is running on https://127.0.0.1:8080`);
 })
 
 
 const wss = new Websocket.Server({server: Httpsserver})
 
 const group = {}
-const heartBeatTime = 50000
 
 
 wss.on('connection', function (ws) {
+
   ws.on('message', function (message) {
     //console.log('server receive message: ', message.toString())
     const data = JSON.parse(message.toString())
@@ -91,7 +91,14 @@ wss.on('connection', function (ws) {
 
     if (data.roomId && data.content){
         let text = `{ "date" : ${data.date},"userName": "${data.userName}", "content": "${data.content}"}\n`
+        try {
+          fs.accessSync( 'db' , fs.constants.F_OK);
+        } catch (err) {
+            fs.mkdir('db', (error) => {console.error(error)});
+        }
         fs.appendFileSync('db/'+data.roomId, text)
+
+        
     }
 
     data.num = group[ws.roomId]
