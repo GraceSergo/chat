@@ -110,7 +110,7 @@ async function getAndDecryptMsg(message) {
 document.querySelector('.enc').addEventListener('click', e => {
     e.preventDefault()
     if (input.value == '') return
-    if (ws.readyState == 3) connect()
+    if (ws.readyState == 3) {connect(); return}
     encryptAndSendMsg()
     input.value = ''
 })
