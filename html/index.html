@@ -134,7 +134,7 @@ function Enter(){
     document.querySelector('.login').style.display="none"
     keyword = MD5(key)+MD5(chatID)
     keyword = keyword.slice(0,43)
-    content()
+    connect()
     setInterval(connect, 30000)
     input.focus()
 }
