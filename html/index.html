@@ -75,7 +75,7 @@ function connect() {
             }))
         }
         ws.onmessage = (e) => {
-            let message = event.data
+            let message = e.data
             let mes = JSON.parse(message.toString())
             let d = new Date(mes.date).toLocaleString()
             if (mes.event == 'login') {
