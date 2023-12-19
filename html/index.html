@@ -41,11 +41,11 @@
 
 <div class="commentbox" style="display:none;">
     <span>Comment <input type="button" class="clear" value="clear"></span>
-    <div id="comments" >
+    <form id="comments" >
         <div class="commenttext"></div>
         <input type="text" name="text" id="text" autofocus autocomplete="off">
         <button class="enc">Send</button>
-    </div>
+    </form>
 </div>
 <script src="scr.js"></script>
 <script>
@@ -55,17 +55,76 @@ let chatID = 0, login = '', keystring = '', keyword = '',lastdate = ''
 const input = document.querySelector('#text')
 // контейнер для вывода результатов
 const output = document.querySelector('.commenttext')
-let lastcheck = 0
 
-let interval
+let ws
 
-//Вход в систему
-document.getElementById('key').addEventListener('keypress',(e)=>{
-    if (e.which == 13) {e.preventDefault();Enter(); }
+function connect() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
+    if (ws === undefined || (ws && ws.readyState === 3)) {
+        ws = new WebSocket(`wss://${location.host}/`);
+
+        // Прослушивание успешности создания соединения 
+        ws.onopen = () => { 
+            console.log('onopen', ws.readyState) // 1
+            roomOpen = true
+            ws.send(JSON.stringify({
+            date: Date.now(),
+            userName: login,
+            roomId: chatID,
+            event: 'login', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
+            }))
+        }
+        ws.onmessage = (e) => {
+            let message = event.data
+            let mes = JSON.parse(message.toString())
+            let d = new Date(mes.date).toLocaleString()
+            if (mes.event == 'login') {
+                output.innerHTML += `${d}: ${mes.userName} вошел в чат<br>`
+            }
+            if (mes.content == undefined) return
+            WriteText(mes)
+        };
+        getFulltext(chatID)
+    }
+  }
+
+async function encryptAndSendMsg(){
+    const msg = input.value
+    // шифрование
+    const cipher = await encrypt(msg, keyword, keystring)
+
+    ws.send(JSON.stringify({
+        date: Date.now(),
+        userName: login,
+        roomId: chatID,
+        content: pack(cipher),
+    }))
+}
+
+async function getAndDecryptMsg(message) {
+    // распаковка и расшифровка
+    const msg = await decrypt(unpack(message), keyword, keystring)
+    return await msg
+}
+
+document.querySelector('.enc').addEventListener('click', e => {
+    e.preventDefault()
+    if (input.value == '') return
+    if (ws.readyState == 3) connect()
+    encryptAndSendMsg()
+    input.value = ''
 })
+
+document.querySelector('.clear').addEventListener('click', e => {
+    e.preventDefault()
+    clear()
+})
+
 document.querySelector('.enter').addEventListener('click', e => {
-    e.preventDefault();  Enter();
+    e.preventDefault()
+    Enter()
 })
+
 function Enter(){
     login = document.getElementById('login').value;
     chatID = document.getElementById('chatID').value;
@@ -73,67 +132,16 @@ function Enter(){
     if (login =='' || chatID =='' || keystring =='') return
     document.querySelector('.commentbox').style.display=''
     document.querySelector('.login').style.display="none"
-    start()
+    keyword = MD5(key)+MD5(chatID)
+    keyword = keyword.slice(0,43)
+    content()
+    setInterval(connect, 30000)
     input.focus()
 }
 
 
-function start(){
-    keyword = MD5(key)+MD5(chatID)
-    keyword = keyword.slice(0,43)
-
-    let message = JSON.stringify({
-        date: Date.now(),
-        userName: login,
-        roomId: chatID,
-        event: 'login', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
-        })
-
-    Send(message)
-    CheckMessage()
-    interval = setInterval(CheckMessage, 5000)
-}
-//Отправка сообщений
-async function Send(message){
-    let response = await fetch('/send', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json;charset=utf-8'},
-        body: message
-    });
-    if (response.ok) {
-        let txt = await response.text()
-        if (txt == '0') return
-        input.value = ''
-        clearInterval(interval)
-        CheckMessage()
-        interval = setInterval(CheckMessage, 5000)
-    }
-}
-//Получение сообщений
-async function CheckMessage(){
-    let message = JSON.stringify({
-        date: lastcheck,
-        userName: login,
-        roomId: chatID,
-        event: 'check'})
-    lastcheck = Date.now()
-    let response = await fetch('/check', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json;charset=utf-8'},
-        body: message
-    });
-    if (response.ok) {
-        let txt = await response.text()
-        if (txt == '0') return
-        let txtj = JSON.parse(txt)
-        txtj.forEach((t)=>{
-            if (t.event == 'message') WriteText(t)
-        })
-    }
-}
-//Вывод новых сообщений
 async function WriteText(data){
-    const msg = await decrypt(unpack(data.content), keyword, keystring)
+    let msg = await getAndDecryptMsg(data.content)
     let d = new Date(data.date)
     let date = d.toLocaleDateString()
     let time = d.toLocaleTimeString()
@@ -147,31 +155,30 @@ async function WriteText(data){
     output.innerHTML += `<div${ustag}><span class="user">${data.userName}</span> <span class="time">(${time}):</span> <span class="msg">${msg}</span></div$>`
     output.scrollTop = output.scrollHeight;
 }
-//Нажатие клавиши отправки сообщений
-input.addEventListener('keypress',(e)=>{
-    if (e.which == 13) {e.preventDefault(); EncMsg();}
- })
-document.querySelector('.enc').addEventListener('click', e => {
-    e.preventDefault(); 
-    EncMsg();
-})
-//генерация сообщения на отправку
-async function EncMsg(){
-    if (input.value == '') return
-    const cipher = await encrypt(input.value, keyword, keystring) 
-    let message = JSON.stringify({
-        date: Date.now(),
-        userName: login,
-        roomId: chatID,
-        content: pack(cipher),
-        event: 'message', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
-        })
-    Send(message);
+
+
+function GetFull(text){
+    let txt = text.split('\n')
+    txt.forEach(string => {
+        if (string != '') {
+            let data = JSON.parse(string)
+            WriteText(data)
+        }
+    });
 }
 
-document.querySelector('.clear').addEventListener('click', e => {
-    e.preventDefault(); clear()
-})
+
+async function getFulltext(id){
+    let response = await fetch('/getfull', {
+        method: 'POST',
+        headers: {'Content-Type': 'text/html'},
+        body: id
+    });
+    if (response.ok) {
+        let txt = await response.text()
+        GetFull(txt)
+    }
+}
 
 async function clear(){
     let response = await fetch('/clear', {
@@ -185,6 +192,11 @@ async function clear(){
     }
 }
 
+document.getElementById('key').addEventListener('keypress',(e)=>{
+    if (e.which == 13) {
+        Enter()
+    }
+})
     </script>
 </body>
 </html>
