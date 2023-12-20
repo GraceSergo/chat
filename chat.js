@@ -9,18 +9,10 @@ const requestListener = function (req, res) {
             let html = fs.readFileSync('html/index.html').toString()
             res.end(html)
         }
-        if (req.url == '/2'){
-            res.writeHead(200, {'Content-Type': 'text/html'})
-            let html = fs.readFileSync('./html/index2.html').toString()
-            res.end(html)
-        }
         if (req.url == '/scr.js'){
             res.writeHead(200, {'Content-Type': 'text/javascript'})
             let html = fs.readFileSync('./html/scr.js').toString()
             res.end(html)
-        }
-        if (req.url.startsWith('/files/')){
-            DownloadFiles(req.url,res)
         }
         return
     } //get
@@ -61,7 +53,7 @@ const options = {
 
 const Httpsserver = https.createServer(options,requestListener);
 Httpsserver.listen(8080, () => {
-    console.log(`Server is running on https://127.0.0.1:8080`);
+    console.log(`Server is running on https://______:8080`);
 })
 
 
@@ -91,11 +83,11 @@ wss.on('connection', function (ws) {
 
     if (data.roomId && data.content){
         let text = `{ "date" : ${data.date},"userName": "${data.userName}", "content": "${data.content}"}\n`
-        try {
-          fs.accessSync( 'db' , fs.constants.F_OK);
-        } catch (err) {
-            fs.mkdir('db', (error) => {console.error(error)});
-        }
+        // try {
+        //   fs.accessSync( 'db' , fs.constants.F_OK);
+        // } catch (err) {
+        //     fs.mkdir('db', (error) => {console.error(error)});
+        // }
         fs.appendFileSync('db/'+data.roomId, text)
 
         
