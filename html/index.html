@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>CHAT</title>
     <style>
         .text{
             display: flex;
@@ -20,10 +20,13 @@
         .time, .user{color:#0300d1; display: inline; font-weight: bold;} 
         .author .time, .author .user{color:#e60310;}
         .date{margin-left: 30%; padding: 20px; font-weight: bold; display: block; top: 0;}
-	.actual{position: sticky;}
+	    .actual{position: sticky;}
         .logs .user, .logs .date {opacity: .6;}
         .logs {display: flex;font-size: 13px;font-family: sans-serif;margin-bottom: 0 !important;}
         .message {display: block;}
+        .users span::before{content: '•';position: absolute; font-size: 2em; top: -10px; left: 8px; color: red;}
+        .online::before{color:green !important;}
+        .users span{position: relative; padding: 0 30px; font-size: 1.2em; }
     </style>
 </head>
 <body>
@@ -41,6 +44,7 @@
 
 <div class="commentbox" style="display:none;">
     <span>Comment <input type="button" class="clear" value="clear"></span>
+    <div class="users"></div>
     <form id="comments" >
         <div class="commenttext"></div>
         <input type="text" name="text" id="text" autofocus autocomplete="off">
@@ -49,29 +53,41 @@
 </div>
 <script src="scr.js"></script>
 <script>
-let chatID = 0, login = '', keystring = '', keyword = '',lastdate = ''
+let lastactive = 0
+let chatID = 0, login = '', keystring = '', keyword = '',lastdate = '',titleon = ''
 
 // поле для ввода сообщения, которое будет зашифровано
 const input = document.querySelector('#text')
 // контейнер для вывода результатов
 const output = document.querySelector('.commenttext')
+// заголовок сообщения
+const title = document.getElementsByTagName('title')[0]
+
 
 let ws
 
 function connect() {
+    const alluser = document.querySelectorAll('.users span')
+    if (alluser.length > 0){
+        alluser.forEach((a)=>{
+            if (Date.now() - Number(a.getAttribute('data-last')) > 50000) {
+                a.classList.remove('online')
+            }
+        })
+    }
     // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
     if (ws === undefined || (ws && ws.readyState === 3)) {
-        ws = new WebSocket(`wss://${location.host}/`);
+        ws = new WebSocket(`ws://${location.host}/`);
 
         // Прослушивание успешности создания соединения 
         ws.onopen = () => { 
-            console.log('onopen', ws.readyState) // 1
+            // console.log('onopen', ws.readyState) // 1
             roomOpen = true
             ws.send(JSON.stringify({
-            date: Date.now(),
-            userName: login,
-            roomId: chatID,
-            event: 'login', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
+                date: Date.now(),
+                userName: login,
+                roomId: chatID,
+                event: 'login', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
             }))
         }
         ws.onmessage = (e) => {
@@ -79,12 +95,29 @@ function connect() {
             let mes = JSON.parse(message.toString())
             let d = new Date(mes.date).toLocaleString()
             if (mes.event == 'login') {
-                output.innerHTML += `${d}: ${mes.userName} вошел в чат<br>`
+                if (!document.querySelector(`[data-user="${mes.userName}"]`)){
+                    const userspan = document.createElement('span')
+                    userspan.innerText = mes.userName
+                    userspan.setAttribute('data-user', mes.userName)
+                    document.querySelector('.users').append(userspan)
+                }
+
+                document.querySelector(`[data-user="${mes.userName}"]`).classList.add('online')
+                document.querySelector(`[data-user="${mes.userName}"]`).setAttribute('data-last', Date.now())
+
+                // output.innerHTML += `${d}: ${mes.userName} вошел в чат<br>`
             }
             if (mes.content == undefined) return
             WriteText(mes)
         };
         getFulltext(chatID)
+    } else {
+        ws.send(JSON.stringify({
+            date: Date.now(),
+            userName: login,
+            roomId: chatID,
+            event: 'login', // Отправить на сервер сообщение о входе в систему с соответствующей информацией о чате и информацией о пользователе
+        }))
     }
   }
 
@@ -135,7 +168,7 @@ function Enter(){
     keyword = MD5(key)+MD5(chatID)
     keyword = keyword.slice(0,43)
     connect()
-    setInterval(connect, 30000)
+    setInterval(connect, 20000)
     input.focus()
 }
 
@@ -154,6 +187,12 @@ async function WriteText(data){
     if (data.userName == login) ustag = ' class="author"'
     output.innerHTML += `<div${ustag}><span class="user">${data.userName}</span> <span class="time">(${time}):</span> <span class="msg">${msg}</span></div$>`
     output.scrollTop = output.scrollHeight;
+    if (data.userName != login){
+        titleon = 'Новое сообщение'
+        var audio=new Audio('sound.mp3');
+        audio.play();
+    }
+
 }
 
 
@@ -198,6 +237,31 @@ document.getElementById('key').addEventListener('keypress',(e)=>{
         Enter()
     }
 })
+
+//Отслеживание активности
+var changeTitle = function() {
+    this.title = function () {
+        if (titleon != '') document.title = (document.title == titleon ? " * " : titleon);
+    }
+};
+
+changeTitle.prototype.start = function() {
+    this.timer = setInterval(this.title, 1000);
+};
+
+changeTitle.prototype.stop = function() {
+    clearInterval(this.timer)
+};
+
+var timerTitle = new changeTitle();
+window.onblur = function() {
+    timerTitle.start();
+};
+window.onfocus = function() {
+    timerTitle.stop();
+    titleon = ''
+    document.title = 'CHAT'
+};
     </script>
 </body>
 </html>

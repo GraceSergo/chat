@@ -14,32 +14,44 @@ const requestListener = function (req, res) {
             let html = fs.readFileSync('./html/scr.js').toString()
             res.end(html)
         }
+        if (req.url == '/sound.mp3'){
+          res.writeHead(200, {'Content-Type': 'text/javascript'})
+          fs.readFile('html/sound.mp3', function (error, data) {
+            if (error) {
+                res.statusCode = 404;
+                res.end('Resourse not found!');
+            } else {
+                res.end(data);
+                return
+            }
+        })
+      }
         return
     } //get
     if (req.method == 'POST'){
-		let data = ''
-		req.on('data', function(chunk) {
-			data += chunk
-		})
+        let data = ''
+        req.on('data', function(chunk) {
+          data += chunk
+        })
 
-		req.on('end', function() {
-			if (req.url == '/getfull'){
-                res.writeHead(200, {'Content-Type': 'text/html'})
-                fs.readFile('db/'+data, function(error,data){
-                    if(error) {  // если возникла ошибка
-                        res.end('')
-                        return;
-                    }
-                    res.end(data.toString());   // выводим считанные данные
+        req.on('end', function() {
+          if (req.url == '/getfull'){
+            res.writeHead(200, {'Content-Type': 'text/html'})
+            fs.readFile('db/'+data, function(error,data){
+                if(error) {  // если возникла ошибка
+                    res.end('')
+                    return;
+                }
+                res.end(data.toString());   // выводим считанные данные
+            });
+          }
+          if (req.url == '/clear'){
+              res.writeHead(200, {'Content-Type': 'text/html'})
+              fs.unlink('db/'+data, err => {
+                  if(err) res.end('0'); // не удалось удалить файл
+                  res.end('1')
                 });
-			}
-            if (req.url == '/clear'){
-                res.writeHead(200, {'Content-Type': 'text/html'})
-                fs.unlink('db/'+data, err => {
-                    if(err) res.end('0'); // не удалось удалить файл
-                    res.end('1')
-                 });
-			}
+          }
         })
     }
 }
