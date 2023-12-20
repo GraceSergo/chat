@@ -13,8 +13,8 @@
             border: 1px solid;
         }
         #comments{width: 80%;}
-        #comments input{width:70%; margin: 10px 0 20px auto;}
-        #comments button{width:27%; margin: 10px 0 20px auto;}
+        #text{width:70%; margin: 10px 0 20px auto;}
+        .enc{width:27%; margin: 10px 0 20px auto;}
         .commenttext{display:flex; height: 500px; overflow-x: auto; width:100%; border: 1px solid #000; flex-direction: column; color: black; background: #fffd; position: relative;}
         .commenttext>div{margin-bottom: 15px;}
         .time, .user{color:#0300d1; display: inline; font-weight: bold;} 
@@ -27,6 +27,8 @@
         .users span::before{content: '•';position: absolute; font-size: 2em; top: -10px; left: 8px; color: red;}
         .online::before{color:green !important;}
         .users span{position: relative; padding: 0 30px; font-size: 1.2em; }
+        .commentsend{display: flex; flex-direction: row;}
+        .msg{white-space: pre-wrap;}
     </style>
 </head>
 <body>
@@ -47,8 +49,12 @@
     <div class="users"></div>
     <form id="comments" >
         <div class="commenttext"></div>
-        <input type="text" name="text" id="text" autofocus autocomplete="off">
-        <button class="enc">Send</button>
+        <div class="commentsend">
+            <textarea name="text" id="text" cols="30" rows="10" autofocus ></textarea>
+            <!-- <input type="text" name="text" id="text" autofocus autocomplete="off"> -->
+            <input type="button" class="enc" value="Send" onclick="Send()"><input type="checkbox" name="check" id="check">
+        </div>
+        
     </form>
 </div>
 <script src="scr.js"></script>
@@ -140,13 +146,15 @@ async function getAndDecryptMsg(message) {
     return await msg
 }
 
-document.querySelector('.enc').addEventListener('click', e => {
-    e.preventDefault()
+// document.querySelector('.enc').addEventListener('click', e => {
+
+function Send(){
+    // e.preventDefault()
     if (input.value == '') return
     if (ws.readyState == 3) {connect(); return}
     encryptAndSendMsg()
     input.value = ''
-})
+}
 
 document.querySelector('.clear').addEventListener('click', e => {
     e.preventDefault()
@@ -237,6 +245,16 @@ document.getElementById('key').addEventListener('keypress',(e)=>{
         Enter()
     }
 })
+
+input.addEventListener('keypress',(e)=>{
+    if (e.which == 13) {
+        if (document.getElementById('check').checked) {
+            if (e.shiftKey) return
+            else Send()
+        } 
+    }
+})
+
 
 //Отслеживание активности
 var changeTitle = function() {
