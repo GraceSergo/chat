@@ -159,6 +159,7 @@ async function WriteText(data){
 
 function GetFull(text){
     let txt = text.split('\n')
+    output.innerHTML = ''
     txt.forEach(string => {
         if (string != '') {
             let data = JSON.parse(string)
