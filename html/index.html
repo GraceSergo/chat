@@ -77,7 +77,7 @@ function connect() {
     }
     // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
     if (ws === undefined || (ws && ws.readyState === 3)) {
-        ws = new WebSocket(`ws://${location.host}/`);
+        ws = new WebSocket(`wss://${location.host}/`);
 
         // Прослушивание успешности создания соединения 
         ws.onopen = () => { 
