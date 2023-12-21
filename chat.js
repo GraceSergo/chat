@@ -15,8 +15,18 @@ const requestListener = function (req, res) {
             res.end(html)
         }
         if (req.url == '/sound.mp3'){
-          res.writeHead(200, {'Content-Type': 'text/javascript'})
           fs.readFile('html/sound.mp3', function (error, data) {
+              if (error) {
+                  res.statusCode = 404;
+                  res.end('Resourse not found!');
+              } else {
+                  res.end(data);
+                  return
+              }
+          })
+        }
+        if (req.url == '/favicon.ico'){
+          fs.readFile('html/favicon.ico', function (error, data) {
             if (error) {
                 res.statusCode = 404;
                 res.end('Resourse not found!');
@@ -24,8 +34,8 @@ const requestListener = function (req, res) {
                 res.end(data);
                 return
             }
-        })
-      }
+          })
+        }
         return
     } //get
     if (req.method == 'POST'){
